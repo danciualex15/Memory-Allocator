@@ -110,7 +110,7 @@ void split_big_mem_block(struct block_meta *mem_block, size_t size)
 }
 
 
-void *os_malloc(size_t size)
+void *cs_malloc(size_t size)
 {
 	// always make sure to merge all continuous free blocks before working on the list
 	merge_free_blocks();
@@ -207,7 +207,7 @@ void *os_malloc(size_t size)
 	return NULL;
 }
 
-void os_free(void *ptr)
+void cs_free(void *ptr)
 {
 	if (ptr == NULL)
 		return;
@@ -230,7 +230,7 @@ void os_free(void *ptr)
 	}
 }
 
-void *os_calloc(size_t nmemb, size_t size)
+void *cs_calloc(size_t nmemb, size_t size)
 {
 	struct block_meta *new_mem_block = NULL;
 
@@ -310,19 +310,19 @@ void *os_calloc(size_t nmemb, size_t size)
 	return NULL;
 }
 
-void *os_realloc(void *ptr, size_t size)
+void *cs_realloc(void *ptr, size_t size)
 {
 	// checking if we don't have STATUS_FREE blocks next to each other
 	merge_free_blocks();
 	if (size <= 0) {
 		if (ptr != NULL) {
-			os_free(ptr);
+			cs_free(ptr);
 			return NULL;
 		} else {
 			return NULL;
 		}
 	} else if (ptr == NULL) {
-		return os_malloc(size);
+		return cs_malloc(size);
 	}
 	size = alignning(size);
 	struct block_meta *mem_block = (struct block_meta *)ptr - 1;
@@ -342,10 +342,10 @@ void *os_realloc(void *ptr, size_t size)
 			// if new size < org size and is allocated with sbrk => do split
 			split_big_mem_block(mem_block, size);
 		} else {
-			void *new_location = os_malloc(size);
+			void *new_location = cs_malloc(size);
 
 			memcpy(new_location, ptr, min_size);
-			os_free(ptr);
+			cs_free(ptr);
 			return new_location;
 		}
 	} else {
@@ -372,24 +372,24 @@ void *os_realloc(void *ptr, size_t size)
 					split_big_mem_block(mem_block, size);
 					// last resort do malloc
 				} else {
-					void *new_location = os_malloc(size);
+					void *new_location = cs_malloc(size);
 
 					memcpy(new_location, ptr, min_size);
-					os_free(ptr);
+					cs_free(ptr);
 					return new_location;
 				}
 			} else {
-				void *new_location = os_malloc(size);
+				void *new_location = cs_malloc(size);
 
 				memcpy(new_location, ptr, min_size);
-				os_free(ptr);
+				cs_free(ptr);
 				return new_location;
 			}
 		} else {
-			void *new_location = os_malloc(size);
+			void *new_location = cs_malloc(size);
 
 			memcpy(new_location, ptr, min_size);
-			os_free(ptr);
+			cs_free(ptr);
 			return new_location;
 		}
 	}
